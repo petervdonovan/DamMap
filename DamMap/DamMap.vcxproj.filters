@@ -55,7 +55,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="CrackTest.rc">
+    <ResourceCompile Include="DamMap.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

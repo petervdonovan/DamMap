@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26430.16
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CrackTest", "CrackTest\CrackTest.vcxproj", "{F7887BFD-EF89-46EA-BC44-DD6C11ECDA22}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "DamMap", "DamMap\DamMap.vcxproj", "{F7887BFD-EF89-46EA-BC44-DD6C11ECDA22}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
