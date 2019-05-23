@@ -5,18 +5,18 @@
 void Frame::channelBinary(const Mat& src, Mat& out, double thresh, int skip) {
 	Mat output;
 	output.create(src.rows, src.cols, CV_8UC3);
-	//const clock_t begin_time = clock();
 	for (int c = 0; c < src.channels(); c++) {
 		int maxChannel;
+		//The image is split into squares of side length determined by skip. Each of these is processed individually to save time
 		for (int xMajor = 0; xMajor < src.cols; xMajor += skip) {
 			for (int yMajor = 0; yMajor < src.rows; yMajor += skip) {
+				//Get region of interest
 				Mat roi(src, Range(max(0, yMajor + skip / 2 - skip), min(yMajor + skip / 2 + skip, src.rows)), Range(max(0, xMajor + skip / 2 - skip), min(xMajor + skip / 2 + skip, src.cols)));
-				//Mat roi(src, Range(max(0, yMajor + 3 - margin), min(yMajor + 3 + margin, src.rows - 1)), Range(max(0, xMajor + 3 - margin), min(xMajor + 3 + margin, src.cols - 1)));
-				//const clock_t startMaxChannel = clock();
+				//Get maximum value of nearby channels. This takes time, so it only happens once in each square region of interest
 				maxChannel = getMaxChannelNearby(roi, c);
-				//std::cout << "time for getMaxChannelNearby: " << float(clock() - startMaxChannel) * 1000 / CLOCKS_PER_SEC << endl;
 				for (int x = xMajor; x < src.cols && (x % skip != 0 || x == xMajor); x++) {
 					for (int y = yMajor; y < src.rows && (y % skip != 0 || y == yMajor); y++) {
+						//Set channels that are close to maximum value to 255 and all others to 0
 						if (src.at<Vec3b>(y, x)[c] > maxChannel * thresh) {
 							output.at<Vec3b>(y, x)[c] = 255;
 						}
@@ -28,8 +28,6 @@ void Frame::channelBinary(const Mat& src, Mat& out, double thresh, int skip) {
 			}
 		}
 	}
-	//std::cout << "inside channelBinary: " << float(clock() - begin_time) * 1000 / CLOCKS_PER_SEC << endl;
-
 	out = output.clone();
 }
 
@@ -68,8 +66,8 @@ int Frame::getAvgSaturationBackground(Mat& hsvMat, vector<cv::Mat>& foregroundBi
 	for (int i = 0; i < 20; i++) {
 
 		int col = rand() % hsvMat.cols; //get random column index
-		int row = rand() % hsvMat.rows; //get random row    index
-		for (int j = 0; j < foregroundBinaries.size(); j++) { //Pick another pixel if it's a foreground pixel. (THIS PROBABLY DOES TAKE A LONG TIME.)
+		int row = rand() % hsvMat.rows; //get random row index
+		for (int j = 0; j < foregroundBinaries.size(); j++) { //Pick another pixel if it's a foreground pixel.
 			if (foregroundBinaries[j].at<uchar>(row, col) != 0) {  
 				col = rand() % hsvMat.cols;
 				row = rand() % hsvMat.rows;
@@ -81,7 +79,7 @@ int Frame::getAvgSaturationBackground(Mat& hsvMat, vector<cv::Mat>& foregroundBi
 			avg = i;
 		}
 		else {
-			avg = (avg * i + current) / (i + 1);
+			avg = (avg * i + current) / (i + 1); //Average is weighted so that each sample matters equally even if taken at the end
 		}
 	}
 	return avg;
@@ -90,23 +88,26 @@ int Frame::getAvgSaturationBackground(Mat& hsvMat, vector<cv::Mat>& foregroundBi
 Frame::Frame(Mat image)
 {
 	this->image = image;
+	//Set channels all to 0 or 255
 	channelBinary(image, imgChannelBinary, 0.97, 2);
-
-	inRange(imgChannelBinary, Scalar(0, 0, 0), Scalar(20, 20, 40), darkerThanLocal);
+	
+	//Get all pixels whose channels were all darker than surrounding channels
+	inRange(imgChannelBinary, Scalar(0, 0, 0), Scalar(20, 20, 20), darkerThanLocal);
+	
 	cvtColor(image, hsv, COLOR_BGR2HSV);
-
+	
 	vector<Mat> foregrounds(1);
 	foregrounds[0] = darkerThanLocal.clone();
 	int avg = getAvgSaturationBackground(hsv, foregrounds);
-	inRange(hsv, Scalar(0, 0, 0), Scalar(255, 255, avg * 0.9), dark);//detect black (cracks/lines)
+	inRange(hsv, Scalar(0, 0, 0), Scalar(255, 255, avg * 0.9), dark);//detect black (cracks/lines). This also includes shadows, however.
 	
-	eraseSmall(dark, dark);
-	darkerThanLocal -= dark;
-	eraseSmallAbs(darkerThanLocal, darkerThanLocal);
+	eraseSmall(dark, dark); //Erase black gridlines, which are narrower than the red line
+	darkerThanLocal -= dark;//Subtract the red line (and some shadows) from the binary of where the black gridlines likely are
+	eraseSmallAbs(darkerThanLocal, darkerThanLocal); //Erase noise
 
 	bitwise_not(darkerThanLocal, darkerThanLocal);
-	Canny(image, canny, 15, 45, 3);
-	canny -= darkerThanLocal;
+	Canny(image, canny, 15, 45, 3); //Canny that is so sensitive it detects noise
+	canny -= darkerThanLocal;     //Erase noise, which is everything not near the black gridlines
 }
 
 
