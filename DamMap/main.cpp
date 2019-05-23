@@ -1,7 +1,3 @@
-
-//try.cpp : This file contains the 'main' function. Program execution begins and ends there.
-
-//#include "pch.h"
 #include <iostream>
 #include <string>
 
@@ -27,37 +23,23 @@ int main()
 		return -1;
 	}
 
-	
-	//double contrast = 2;
 	Mat image;
 	capture >> image;
 	image = getQuadrant(image, 1);
 	History hist(image.rows, image.cols);
 
-	////PERFORMANCE TEST
-	//const clock_t startMaxChannel = clock();
-	//for (int i = 0; i < 1000; i++) {
-	//	getMaxChannelNearby(image, c);
-	//}
-	//std::cout << "time for getMaxChannelNearby: " << float(clock() - startMaxChannel) * 1000 / CLOCKS_PER_SEC << endl;
-
-
 	while (char(cv::waitKey(1)) != 'q') {
-		//const clock_t begin_time = clock();
-		for (int i = 0; i < 1; i++) {   //skip through six images
-			capture >> image;
-		}
+		capture >> image;
 		if (!capture.isOpened()) break;
 		image = getQuadrant(image, 1);   //get quadrant 1 of the image
 
 		Frame frame = Frame(image);
 
 		LineGroupList lineGroups = LineGroupList(frame);
-		lineGroups.showGroups();
-		hist.update(lineGroups.getGroupsOfLines());
-		hist.showCurrent(image);
-		hist.show();
-		//std::cout << "inside while loop: " << float(clock() - begin_time) * 1000 / CLOCKS_PER_SEC << endl;
+		lineGroups.showGroups(); 	//Show groups of lines (for debugging)
+		hist.update(lineGroups.getGroupsOfLines()); //Update map
+		hist.showCurrent(image);	//Show simplified lines (for debugging)
+		hist.show();	//Show map
 	}
 	cv::waitKey(0);
 }
