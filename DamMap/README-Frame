@@ -1,0 +1,16 @@
+Frame is the class used to do initial processing of the image as a whole, 
+before any black gridlines are extracted from it.
+
+This processing is completed upon creation of the Frame object by the 
+constructor so that calls to getter methods can access it without any 
+repeated processing.
+
+The current image from the ROV's cameras should be passed to the constructor. The 
+constructor then internally calls private methods to get areas of the image
+that could be gridlines, subtract the red path and shadows from those areas,
+and then use the result to ignore all parts of the Canny edge detection
+that are not in the right area.
+
+The method getFinalCanny() is the method that is needed to finish processing 
+a frame. The other methods are used for debugging intermediate steps in the 
+program.
