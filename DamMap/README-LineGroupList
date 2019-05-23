@@ -1,0 +1,12 @@
+An object of class LineGroupList requires the output of the 
+HoughLinesP function from the OpenCV library.
+
+Most processing is completed in the constructor. The purpose is
+to sort through the 1-dimensional vector of lines provided and group
+similar lines together by placing them in a 2-dimensional vector.
+
+These groups of lines can be shown in an image in a new window for 
+debugging.
+
+It is then possible to get this line group and assume all lines that
+are grouped together to be part of the same feature in the image.
