@@ -1,1 +1,2 @@
-
+This file includes all functions that are generally useful for mapping 
+the dam, but that do not exist in the OpenCV library.
