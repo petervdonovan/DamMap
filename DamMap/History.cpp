@@ -21,7 +21,7 @@ void History::update(vector<vector<Vec4i>> groupsOfLines) {
 		bool found = false; //Start by assuming no match for the given current line is found. 
 							//If none is found, that will be recorded for possible deletion of the line
 		for (auto group = groupsOfLines.begin(); group != groupsOfLines.end(); ) {
-			if (i->update(*group)) {
+			if (i->update(*group)) { //If the current line is near enough to the line group to update its location based on it
 				found = true;
 				group = groupsOfLines.erase(group);		//if this group of lines matches this current line, it is removed
 			}
@@ -29,9 +29,10 @@ void History::update(vector<vector<Vec4i>> groupsOfLines) {
 				++group;
 			}
 		}
-		if (!found) i->incrementVanished();
-		if (i->crossed(min(rows * 3 / 5, cols * 3 / 5))) {
-			cout << "crossed into new square ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! " << endl;
+		if (!found) i->incrementVanished(); //increment count for number of cycles in which the line has disappeared
+		if (i->crossed(min(rows * 3 / 5, cols * 3 / 5))) { //if the current line in CurrentLines has crossed 3/5 of the frame
+			cout << "crossed into new square ! " << endl;
+			//Map out where the new square is relative to the last square the ROV was in
 			if (i->getVertical()) {
 				if (i->getDistFromTopLeft() < cols / 2) {
 					points.push_back(Point(points.back().x + 1, points.back().y));
@@ -50,7 +51,7 @@ void History::update(vector<vector<Vec4i>> groupsOfLines) {
 			}
 			i = currentLines.erase(i);
 		}
-		else if (i->getVanished() > 3) {
+		else if (i->getVanished() > 3) {   //Intended to delete extraneous lines that appear randomly and temporarily
 			i = currentLines.erase(i);
 		}
 		else {
@@ -61,13 +62,13 @@ void History::update(vector<vector<Vec4i>> groupsOfLines) {
 	
 	//look at remaining groups of lines for groups that are near the edge of the camera's view
 	//These are the groups that recently appeared and may be new lines that have entered the camera's view
-	//(as opposed to having just appeared as random noise)
+	//(as opposed to having just appeared in the middle as random noise)
 	for (auto group = groupsOfLines.begin(); group != groupsOfLines.end(); ++group) {
 		int totalLength = 0;
 		for (int i = 0; i < group->size(); i++) {
 			totalLength += distance((*group)[i][0], (*group)[i][1], (*group)[i][2], (*group)[i][3]);
 		}
-		if (totalLength > rows) {
+		if (totalLength > rows) { //Ignore groups of lines that are too small
 			LineSimplified newLine = LineSimplified(*group, rows * 1 / 6);
 			int dim = (newLine.getVertical() ? cols : rows);
 			if (newLine.getDistFromTopLeft() < dim * borderThresh || newLine.getDistFromTopLeft() > dim * (1 - borderThresh)) {
@@ -77,9 +78,10 @@ void History::update(vector<vector<Vec4i>> groupsOfLines) {
 	}
 }
 
+//Draws the horizontal and vertical lines detected
 void History::showCurrent(Mat img) {
 	for (size_t i = 0; i < currentLines.size(); i++) {
-		//generate arbitrary color that is always the same for a given index in the currentLines array
+		//generate an arbitrary color that is always the same for a given index in the currentLines array (this is for debugging)
 		Scalar color = Scalar((i * 92) % 255, (i * 193) % 255, (i * 912) % 255);
 		Vec4i endPointL = currentLines[i].getEndpoints(img.rows, img.cols);
 		line(img, Point(endPointL[0], endPointL[1]), Point(endPointL[2], endPointL[3]), color, 3, 1);
@@ -87,6 +89,7 @@ void History::showCurrent(Mat img) {
 	imshow("History", img);
 }
 
+//Draws a map of squares the ROV has been in.
 void History::show() {
 	Mat map(600, 600, CV_8UC1, Scalar(0));
 	for (size_t i = 0; i < points.size(); i++) {
