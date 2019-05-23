@@ -90,23 +90,51 @@ int Frame::getAvgSaturationBackground(Mat& hsvMat, vector<cv::Mat>& foregroundBi
 Frame::Frame(Mat image)
 {
 	this->image = image;
-	channelBinary(image, imgChannelBinary, 0.97, 2);
+	//channelBinary(image, imgChannelBinary, 0.97, 2);
 
-	inRange(imgChannelBinary, Scalar(0, 0, 0), Scalar(20, 20, 40), darkerThanLocal);
-	cvtColor(image, hsv, COLOR_BGR2HSV);
+	//inRange(imgChannelBinary, Scalar(0, 0, 0), Scalar(20, 20, 40), darkerThanLocal);
+	//cvtColor(image, hsv, COLOR_BGR2HSV);
 
-	vector<Mat> foregrounds(1);
-	foregrounds[0] = darkerThanLocal.clone();
-	int avg = getAvgSaturationBackground(hsv, foregrounds);
-	inRange(hsv, Scalar(0, 0, 0), Scalar(255, 255, avg * 0.9), dark);//detect black (cracks/lines)
-	
-	eraseSmall(dark, dark);
-	darkerThanLocal -= dark;
-	eraseSmallAbs(darkerThanLocal, darkerThanLocal);
+	//vector<Mat> foregrounds(1);
+	//foregrounds[0] = darkerThanLocal.clone();
+	//int avg = getAvgSaturationBackground(hsv, foregrounds);
+	//inRange(hsv, Scalar(0, 0, 0), Scalar(255, 255, avg * 0.9), dark);		//detect all that is not white background
+	//Mat red;
+	//inRange(hsv, Scalar(160, 0, 0), Scalar(200, 255, 255), red);
+	//dark += red;
 
-	bitwise_not(darkerThanLocal, darkerThanLocal);
+	//eraseSmall(dark, dark);
+	////imshow("darkness subtracted", dark);
+	//darkerThanLocal -= dark;
+	//eraseSmallAbs(darkerThanLocal, darkerThanLocal);
+	//
+	////imshow("darkerthanlocal", darkerThanLocal);
+	//bitwise_not(darkerThanLocal, darkerThanLocal);
 	Canny(image, canny, 15, 45, 3);
-	canny -= darkerThanLocal;
+	
+	Mat kernels[4] = { (Mat_<int>(3, 3) <<
+		0, -1, -1,
+		0, 1, -1,
+		0, -1, -1),
+	(Mat_<int>(3, 3) <<
+		0, 0, 0,
+		-1, 1, -1,
+		-1, -1, -1),
+	(Mat_<int>(3, 3) <<
+		-1, -1, 0,
+		-1, 1, 0,
+		-1, -1, 0),
+	(Mat_<int>(3, 3) <<
+		-1, -1, -1,
+		-1, 1, -1,
+		0, 0, 0) };
+	for (int i = 0; i < 48; i++) {
+		Mat subtract;
+		cv::morphologyEx(canny, subtract, MORPH_HITMISS, kernels[i % 4]);
+		canny -= subtract;
+	}
+	imshow("canny", canny);
+	//canny -= darkerThanLocal;
 }
 
 

@@ -168,10 +168,19 @@ Mat getQuadrant(Mat& img, int quadrant) {
 	else if (quadrant == 3) {
 		roi = img(Range(img.rows / 2, img.rows - 1), Range(0, img.cols / 2));
 	}
-	else {
+	else if (quadrant == 4) {
 		roi = img(Range(img.rows / 2, img.rows - 1), Range(img.cols / 2, img.cols - 1));
 	}
+	else {
+		img.copyTo(roi);
+	}
 	//roi = roi(Range(roi.rows / 8, roi.rows / 10 * 9), Range(0, roi.cols / 10 * 7));
+	if (roi.cols > 500) {
+		resize(roi, roi, Size(500.0, 500.0 / roi.cols * roi.rows));
+	}
+	if (roi.rows > 500) {
+		resize(roi, roi, Size(500.0 / roi.rows * roi.cols, 500.0));
+	}
 	roi = roi(Range(roi.rows / 7, roi.rows * 6 / 7), Range(roi.cols / 7, roi.cols * 3 / 5));
 	return roi;
 }
