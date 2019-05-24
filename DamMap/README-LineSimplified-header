@@ -1,0 +1,8 @@
+This header file defines the class LineSimplified, which analyzes groups of 
+lines to get and store basic descriptors of that group of lines over time. 
+
+To use this class, pass a vector of similar lines to a new LineSimplified 
+object. Then, when there is a new frame of video and there is a group of lines 
+that may represent the same feature of the image, pass them to the 
+update() in a vector. If they are likely to be the same vector, the update()
+method returns true and a new position of that feature is recorded.
