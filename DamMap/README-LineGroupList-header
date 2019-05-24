@@ -1,0 +1,7 @@
+This header file defines the class LineGroupList, which is used to get
+and store a list of lines that are categorized by their angle and proximity
+to each other.
+
+To use this class, pass a Frame object to a LineGroupList. A call to the
+method getGroupsOfLines() gets a 2-dimensional vector of lines, with lines
+that are close to each other and at similar angles grouped together.
