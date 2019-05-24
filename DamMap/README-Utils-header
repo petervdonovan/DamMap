@@ -1,0 +1,2 @@
+This header file defines the basic functions that are used in this program
+but are not defined in the OpenCV library.
