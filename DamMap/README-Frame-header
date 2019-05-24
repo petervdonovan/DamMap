@@ -1,0 +1,5 @@
+This header file defines the class Frame which preprocesses each frame of video
+in autonomous so that black gridlines can be more easily isolated.
+
+Pass an BGR image to a Frame object. Then, getFinalCanny() will return a binary 
+image of the black gridlines of the dam.
