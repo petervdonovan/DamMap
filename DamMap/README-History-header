@@ -1,0 +1,9 @@
+This header file defines the class History, which stores LineSimplified objects
+and monitors their motion across the camera's field of view to map the ROV's 
+motion between squares of the grid.
+
+To use this class, define a History object at the beginning of the program and 
+pass the dimensions of the frame. Then, pass groups of lines for each frame that
+is to be processed so that their locations are updated.
+
+A call to the method show() opens a new window mapping the path of the ROV.
