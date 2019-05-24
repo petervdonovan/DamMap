@@ -1,0 +1,8 @@
+This file gethers together all of the steps in processing an image that are defined 
+in the other four classes.
+
+First, the program stops and describes the error if there is no video feed. Then, it 
+initializes the object of class History with a starting frame. For each subsequent 
+frame, the image is passed to a Frame object. Lines are extracted using an object of 
+class LineGroupList, and the History object is updated using the result. For each frame,
+the map of the ROV's progress is shown.
