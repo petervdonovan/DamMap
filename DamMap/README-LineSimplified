@@ -1,0 +1,9 @@
+A class for simplifying lines found in the image into something that can more
+easily be processed. Based on a vector of lines that are similar to each other,
+the algorithm combines them into one line, classifies it as either horizontal 
+or vertical, and determines its distance from the origin (the top left corner of
+the camera's view).
+
+To use this class, pass the object a vector of lines that are close to each other.
+It can be used to determine whether a line has moved across the view of the camera
+and to track changes in its distance from the origin.
