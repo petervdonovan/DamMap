@@ -1,4 +1,4 @@
-This file gethers together all of the steps in processing an image that are defined 
+This file gathers together all of the steps in processing an image that are defined 
 in the other four classes.
 
 First, the program stops and describes the error if there is no video feed. Then, it 
