@@ -75,7 +75,6 @@ int LineSimplified::meanDist(vector<Vec4i> lines, bool vertical) {
 			}
 		}
 	}
-	//cout << "sumDists: " << sumDists << endl;
 	meanDist = sumDists / numSamples;
 	return meanDist;
 }
@@ -144,6 +143,5 @@ const int LineSimplified::meanRecentDists() {
 	for (int it = 1; it <= numRecentDists; it++) {
 		sumRecentDists += distFromTopLeft[distFromTopLeft.size() - it];
 	}
-	//cout << sumRecentDists / numRecentDists;
 	return sumRecentDists / numRecentDists;
 }
