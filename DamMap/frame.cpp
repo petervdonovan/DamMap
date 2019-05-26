@@ -5,16 +5,12 @@
 void Frame::channelBinary(const Mat& src, Mat& out, double thresh, int skip) {
 	Mat output;
 	output.create(src.rows, src.cols, CV_8UC3);
-	//const clock_t begin_time = clock();
 	for (int c = 0; c < src.channels(); c++) {
 		int maxChannel;
 		for (int xMajor = 0; xMajor < src.cols; xMajor += skip) {
 			for (int yMajor = 0; yMajor < src.rows; yMajor += skip) {
 				Mat roi(src, Range(max(0, yMajor + skip / 2 - skip), min(yMajor + skip / 2 + skip, src.rows)), Range(max(0, xMajor + skip / 2 - skip), min(xMajor + skip / 2 + skip, src.cols)));
-				//Mat roi(src, Range(max(0, yMajor + 3 - margin), min(yMajor + 3 + margin, src.rows - 1)), Range(max(0, xMajor + 3 - margin), min(xMajor + 3 + margin, src.cols - 1)));
-				//const clock_t startMaxChannel = clock();
 				maxChannel = getMaxChannelNearby(roi, c);
-				//std::cout << "time for getMaxChannelNearby: " << float(clock() - startMaxChannel) * 1000 / CLOCKS_PER_SEC << endl;
 				for (int x = xMajor; x < src.cols && (x % skip != 0 || x == xMajor); x++) {
 					for (int y = yMajor; y < src.rows && (y % skip != 0 || y == yMajor); y++) {
 						if (src.at<Vec3b>(y, x)[c] > maxChannel * thresh) {
@@ -28,8 +24,6 @@ void Frame::channelBinary(const Mat& src, Mat& out, double thresh, int skip) {
 			}
 		}
 	}
-	//std::cout << "inside channelBinary: " << float(clock() - begin_time) * 1000 / CLOCKS_PER_SEC << endl;
-
 	out = output.clone();
 }
 
@@ -62,20 +56,20 @@ void Frame::eraseSmallAbs(const Mat& srcBin, Mat& outBin, int erodeSize, int dil
 	dilate(outBin, outBin, dilateElement);
 }
 
-int Frame::getAvgSaturationBackground(Mat& hsvMat, vector<cv::Mat>& foregroundBinaries) {
+int Frame::getAvgSaturationBackground(Mat& hsvMat/*, vector<cv::Mat>& foregroundBinaries*/) {
 	int avg;
 	Mat_<Vec3b> _hsvMat = hsvMat;
-	for (int i = 0; i < 20; i++) {
+	for (int i = 0; i < 7; i++) {
 
-		int col = rand() % hsvMat.cols; //get random column index
-		int row = rand() % hsvMat.rows; //get random row    index
-		for (int j = 0; j < foregroundBinaries.size(); j++) { //Pick another pixel if it's a foreground pixel. (THIS PROBABLY DOES TAKE A LONG TIME.)
-			if (foregroundBinaries[j].at<uchar>(row, col) != 0) {  
-				col = rand() % hsvMat.cols;
-				row = rand() % hsvMat.rows;
-				j = 0;
-			}
-		}
+		int col = (i * 672) % hsvMat.cols; //get random column index
+		int row = (i * 968) % hsvMat.rows; //get random row    index
+		//for (int j = 0; j < foregroundBinaries.size(); j++) { //Pick another pixel if it's a foreground pixel. (THIS PROBABLY DOES TAKE A LONG TIME.)
+		//	if (foregroundBinaries[j].at<uchar>(row, col) != 0) {  
+		//		col = rand() % hsvMat.cols;
+		//		row = rand() % hsvMat.rows;
+		//		j = 0;
+		//	}
+		//}
 		int current = _hsvMat(row, col)[2];
 		if (i == 0) {
 			avg = i;
@@ -87,30 +81,33 @@ int Frame::getAvgSaturationBackground(Mat& hsvMat, vector<cv::Mat>& foregroundBi
 	return avg;
 }
 
-Frame::Frame(Mat image)
+Frame::Frame(Mat &image, int erodeIterations, int cannyThresh1, double cannyRatio, int cannyAperture, double darkThresh, int redMinHue, int redMaxHue)
 {
+	const clock_t begin_t = clock();
 	this->image = image;
-	//channelBinary(image, imgChannelBinary, 0.97, 2);
+	std::cout << "1: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 
-	//inRange(imgChannelBinary, Scalar(0, 0, 0), Scalar(20, 20, 40), darkerThanLocal);
-	//cvtColor(image, hsv, COLOR_BGR2HSV);
+	cvtColor(image, hsv, COLOR_BGR2HSV);
 
-	//vector<Mat> foregrounds(1);
-	//foregrounds[0] = darkerThanLocal.clone();
-	//int avg = getAvgSaturationBackground(hsv, foregrounds);
-	//inRange(hsv, Scalar(0, 0, 0), Scalar(255, 255, avg * 0.9), dark);		//detect all that is not white background
+	std::cout << "2: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+
+	//vector<Mat> foregrounds(0);
+	int avg = getAvgSaturationBackground(hsv/*, foregrounds*/);
+	std::cout << "2.5: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+	inRange(hsv, Scalar(0, 0, 0), Scalar(255, 255, avg * darkThresh), dark);		//detect all that is not white background
 	//Mat red;
-	//inRange(hsv, Scalar(160, 0, 0), Scalar(200, 255, 255), red);
+	//inRange(hsv, Scalar(redMinHue, 0, 0), Scalar(redMaxHue, 255, 255), red);
 	//dark += red;
 
-	//eraseSmall(dark, dark);
-	////imshow("darkness subtracted", dark);
-	//darkerThanLocal -= dark;
-	//eraseSmallAbs(darkerThanLocal, darkerThanLocal);
-	//
-	////imshow("darkerthanlocal", darkerThanLocal);
-	//bitwise_not(darkerThanLocal, darkerThanLocal);
-	Canny(image, canny, 15, 45, 3);
+	std::cout << "3: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+
+	eraseSmall(dark, dark);
+
+	std::cout << "3.5: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+
+	Canny(image, canny, cannyThresh1, cannyThresh1 * cannyRatio, cannyAperture);
+
+	std::cout << "4: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 	
 	Mat kernels[4] = { (Mat_<int>(3, 3) <<
 		0, -1, -1,
@@ -128,13 +125,22 @@ Frame::Frame(Mat image)
 		-1, -1, -1,
 		-1, 1, -1,
 		0, 0, 0) };
-	for (int i = 0; i < 48; i++) {
+
+	std::cout << "5: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+
+	for (int i = 0; i < erodeIterations; i++) {
 		Mat subtract;
 		cv::morphologyEx(canny, subtract, MORPH_HITMISS, kernels[i % 4]);
 		canny -= subtract;
 	}
-	imshow("canny", canny);
-	//canny -= darkerThanLocal;
+
+	std::cout << "6: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+
+	canny -= dark;
+	showFinalCanny();
+
+
+	std::cout << "7: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 }
 
 
@@ -162,5 +168,7 @@ void Frame::showFinalMask() {
 	imshow("Mask: ", darkerThanLocal);
 }
 void Frame::showFinalCanny() {
+	namedWindow("Canny: ");
+	moveWindow("Canny: ", 0, 0);
 	imshow("Canny: ", canny);
 }

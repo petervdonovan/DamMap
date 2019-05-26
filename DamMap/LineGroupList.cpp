@@ -1,12 +1,10 @@
 #include "LineGroupList.h"
 
-
-
-LineGroupList::LineGroupList(Frame& fr)
+LineGroupList::LineGroupList(Frame& fr, int rho, int thetaMinutes, int threshold, int minLineLength, int maxLineGap)
 {
 	this->frame = &fr;
 
-	HoughLinesP(frame->getFinalCanny(), linesP, 1, CV_PI / 180, 30, 5, 16); // runs the actual detection
+	HoughLinesP(frame->getFinalCanny(), linesP, rho, CV_PI / 180 * thetaMinutes / 60, threshold, minLineLength, maxLineGap); // runs the actual detection
 
 	//sorting linesP from longest to shortest line
 	sort(linesP.begin(), linesP.end(), compareLine);
@@ -54,7 +52,9 @@ void LineGroupList::showGroups() {
 		//Vec4i endPointL = l.getEndpoints(img.rows, img.cols);
 		//line(img, Point(endPointL[0], endPointL[1]), Point(endPointL[2], endPointL[3]), color, 3, 1);
 	}
-	imshow("image with hough lines p", img);
+	namedWindow("Image with Hough Lines");
+	moveWindow("Image with Hough Lines", 500, 0);
+	imshow("Image with Hough Lines", img);
 }
 
 const vector<vector<Vec4i>> LineGroupList::getGroupsOfLines() {

@@ -161,6 +161,7 @@ Mat getQuadrant(Mat& img, int quadrant) {
 	Mat roi;
 	if (quadrant == 1) {
 		roi = img(Range(0, img.rows / 2), Range(img.cols / 2, img.cols - 1));
+		cout << "1" << endl;
 	}
 	else if (quadrant == 2) {
 		roi = img(Range(0, img.rows / 2), Range(0, img.cols / 2));
@@ -182,5 +183,36 @@ Mat getQuadrant(Mat& img, int quadrant) {
 		resize(roi, roi, Size(500.0 / roi.rows * roi.cols, 500.0));
 	}
 	roi = roi(Range(roi.rows / 7, roi.rows * 6 / 7), Range(roi.cols / 7, roi.cols * 3 / 5));
+	//roi = roi(Range(roi.rows / 4, roi.rows * 3/4), Range(roi.cols / 7, roi.cols * 2 / 5));
+	return roi;
+}
+
+Mat getQuadrant(Mat& img, int quadrant, int leftPercent, int topPercent, int rightPercent, int bottomPercent, int maxPixDim) {
+	Mat roi;
+	if (quadrant == 1) {
+		roi = img(Range(0, img.rows / 2), Range(img.cols / 2, img.cols - 1));
+		cout << "1" << endl;
+	}
+	else if (quadrant == 2) {
+		roi = img(Range(0, img.rows / 2), Range(0, img.cols / 2));
+	}
+	else if (quadrant == 3) {
+		roi = img(Range(img.rows / 2, img.rows - 1), Range(0, img.cols / 2));
+	}
+	else if (quadrant == 4) {
+		roi = img(Range(img.rows / 2, img.rows - 1), Range(img.cols / 2, img.cols - 1));
+	}
+	else {
+		img.copyTo(roi);
+	}
+	//roi = roi(Range(roi.rows / 8, roi.rows / 10 * 9), Range(0, roi.cols / 10 * 7));
+	/*if (roi.cols > maxPixDim) {
+		resize(roi, roi, Size(maxPixDim, maxPixDim * roi.rows / roi.cols));
+	}
+	if (roi.rows > maxPixDim) {
+		resize(roi, roi, Size(maxPixDim * roi.cols / roi.rows, maxPixDim));
+	}*/
+	roi = roi(Range(roi.rows * topPercent / 100, roi.rows - (roi.rows * bottomPercent / 100)), Range(roi.cols * leftPercent / 100, roi.cols - (roi.cols * rightPercent / 100) ));
+	//roi = roi(Range(roi.rows / 4, roi.rows * 3/4), Range(roi.cols / 7, roi.cols * 2 / 5));
 	return roi;
 }

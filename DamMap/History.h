@@ -17,7 +17,7 @@ public:
 	History(int rows, int cols, double borderThresh = 0.4);
 	~History();
 
-	void update(vector<vector<Vec4i>> lineGroups);
+	void update(vector<vector<Vec4i>> lineGroups, int crossedThresh, int vanishedThresh, int distThreshForSimilarity);
 	void showCurrent(Mat);
 	void show();
 };

@@ -1,7 +1,5 @@
 #include "History.h"
 
-
-
 History::History(int rows, int cols, double borderThresh)
 {
 	this->rows = rows;
@@ -15,7 +13,7 @@ History::~History()
 {
 }
 
-void History::update(vector<vector<Vec4i>> groupsOfLines) {
+void History::update(vector<vector<Vec4i>> groupsOfLines, int crossedThresh, int vanishedThresh, int distThreshForSimilarity) {
 	//First look in the groups of lines for matches for each existing line
 	for (auto i = currentLines.begin(); i != currentLines.end();) {
 		bool found = false; //Start by assuming no match for the given current line is found. 
@@ -50,15 +48,13 @@ void History::update(vector<vector<Vec4i>> groupsOfLines) {
 			}
 			i = currentLines.erase(i);
 		}
-		else if (i->getVanished() > 3) {
+		else if (i->getVanished() > vanishedThresh) {
 			i = currentLines.erase(i);
 		}
 		else {
 			++i;
 		}
-
 	}
-	
 	//look at remaining groups of lines for groups that are near the edge of the camera's view
 	//These are the groups that recently appeared and may be new lines that have entered the camera's view
 	//(as opposed to having just appeared as random noise)
@@ -68,7 +64,7 @@ void History::update(vector<vector<Vec4i>> groupsOfLines) {
 			totalLength += distance((*group)[i][0], (*group)[i][1], (*group)[i][2], (*group)[i][3]);
 		}
 		if (totalLength > rows) {
-			LineSimplified newLine = LineSimplified(*group, rows * 1 / 6);
+			LineSimplified newLine = LineSimplified(*group, distThreshForSimilarity);
 			int dim = (newLine.getVertical() ? cols : rows);
 			if (newLine.getDistFromTopLeft() < dim * borderThresh || newLine.getDistFromTopLeft() > dim * (1 - borderThresh)) {
 				currentLines.push_back(newLine);
@@ -84,6 +80,8 @@ void History::showCurrent(Mat img) {
 		Vec4i endPointL = currentLines[i].getEndpoints(img.rows, img.cols);
 		line(img, Point(endPointL[0], endPointL[1]), Point(endPointL[2], endPointL[3]), color, 3, 1);
 	}
+	namedWindow("History");
+	moveWindow("History", 1000, 0);
 	imshow("History", img);
 }
 
@@ -95,5 +93,7 @@ void History::show() {
 			1, Scalar(255), 3, 8);
 		rectangle(map, rec, Scalar(255));
 	}
+	namedWindow("Map");
+	moveWindow("Map", 0, 500);
 	imshow("Map", map);
 }

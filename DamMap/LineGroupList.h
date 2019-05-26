@@ -16,7 +16,7 @@ private:
 	vector<vector<Vec4i>> groupsOfLines;
 
 public:
-	LineGroupList(Frame& frame);
+	LineGroupList(Frame& fr, int rho = 1, int thetaMinutes = 60, int threshold = 30, int minLineLength = 5, int maxLineGap = 16);
 	~LineGroupList();
 
 	void showGroups();
