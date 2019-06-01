@@ -48,10 +48,10 @@ int main()
 	History hist(image.rows, image.cols);
 
 	//testing only
-	//capture.set(CAP_PROP_POS_MSEC, 36000);
+	//capture.set(CAP_PROP_POS_MSEC, 11600);
 
 	namedWindow("Frame (preprocessing) variables", WINDOW_AUTOSIZE);
-	int erodeIterations, cannyThresh1, cannyThresh2Percent, cannyAperture, darkThreshPercent, redMinHue, redMaxHue;
+	int erodeIterations, cannyThresh1, cannyThresh2Percent, cannyAperture, darkThreshPercent, redMinHue, redMaxHue/*, dilateKernel2Dim, imgEdgeProp*/;
 	erodeIterations = 20;
 	cannyThresh1 = 13;
 	cannyThresh2Percent = 1000;
@@ -59,20 +59,25 @@ int main()
 	darkThreshPercent = 90;
 	redMinHue = 160;
 	redMaxHue = 200;
+	//dilateKernel2Dim = 3;
+	//imgEdgeProp = 7;
 	createTrackbar("Erode Iterations", "Frame (preprocessing) variables", &erodeIterations, 200);
 	createTrackbar("Canny Threshold 1", "Frame (preprocessing) variables", &cannyThresh1, 45);
 	createTrackbar("Canny Threshold 2 percent", "Frame (preprocessing) variables", &cannyThresh2Percent, 400);
 	createTrackbar("Canny Aperture", "Frame (preprocessing) variables", &cannyAperture, 7);
 	createTrackbar("Dark Threshold Percent", "Frame (preprocessing) variables", &darkThreshPercent, 100);
-	createTrackbar("Red Min Hue", "Frame (preprocessing) variables", &redMinHue, 360);
-	createTrackbar("Red Max Hue", "Frame (preprocessing) variables", &redMaxHue, 360);
+	//createTrackbar("Red Min Hue", "Frame (preprocessing) variables", &redMinHue, 360);
+	//createTrackbar("Red Max Hue", "Frame (preprocessing) variables", &redMaxHue, 360);
+	//createTrackbar("DilateKernel2Dim", "Frame (preprocessing) variables", &dilateKernel2Dim, 17);
+	//createTrackbar("imgEdgeProp", "Frame (preprocessing) variables", &imgEdgeProp, 15);
+
 
 
 	namedWindow("Line Extraction and Grouping Variables", WINDOW_AUTOSIZE);
 	int rho, thetaMinutes, threshold, minLineLength, maxLineGap;
 	rho = 1;
 	thetaMinutes = 60;
-	threshold = 3;
+	threshold = 50/*3*/;
 	minLineLength = 35;
 	maxLineGap = 52;
 
@@ -82,7 +87,12 @@ int main()
 	vanishedThresh = 7;
 	distThreshForSimilarity = 30;
 
-	while (char(cv::waitKey(1)) != 'q') {
+	//TEST
+	int permilThresh = 1500;
+	namedWindow("adaptiveThreshold", WINDOW_AUTOSIZE);
+	createTrackbar("C", "adaptiveThreshold", &permilThresh, 5000);
+
+	while (char(cv::waitKey(500)) != 'q') {
 		createTrackbar("Rho (px)", "Line Extraction and Grouping Variables", &rho, 20);
 		createTrackbar("Theta (minutes)", "Line Extraction and Grouping Variables", &thetaMinutes, 1200);
 		createTrackbar("Threshold", "Line Extraction and Grouping Variables", &threshold, 120);
@@ -97,13 +107,14 @@ int main()
 
 		//Get image
 		capture >> image;
+		imshow("src", image);
 		if (!capture.isOpened()) break;
 		image = getQuadrant(image, quadrant, leftPercent, topPercent, rightPercent, bottomPercent, maxPixDim);   //get quadrant 1 of the image
 		std::cout << "Before frame: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 
 		//Preprocessing
 		const clock_t begin_t1 = clock();
-		Frame frame = Frame(image, erodeIterations, cannyThresh1, cannyThresh2Percent / 100.0, max(3, cannyAperture / 2 * 2 + 1), darkThreshPercent / 100.0, redMinHue, redMaxHue);
+		Frame frame = Frame(image, erodeIterations, cannyThresh1, cannyThresh2Percent / 100.0, max(3, cannyAperture / 2 * 2 + 1), darkThreshPercent / 100.0, redMinHue, redMaxHue, permilThresh/*, max(3, dilateKernel2Dim / 2 * 2 + 1), imgEdgeProp*/);
 		std::cout << "frame: " << float(clock() - begin_t1) * 1000 / CLOCKS_PER_SEC << endl;
 
 		//Extract line groups

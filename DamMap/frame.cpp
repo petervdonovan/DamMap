@@ -1,6 +1,7 @@
 #include "frame.h"
 #include "utils.h"
 
+Mat Frame::old;
 
 void Frame::channelBinary(const Mat& src, Mat& out, double thresh, int skip) {
 	Mat output;
@@ -81,7 +82,7 @@ int Frame::getAvgSaturationBackground(Mat& hsvMat/*, vector<cv::Mat>& foreground
 	return avg;
 }
 
-Frame::Frame(Mat &image, int erodeIterations, int cannyThresh1, double cannyRatio, int cannyAperture, double darkThresh, int redMinHue, int redMaxHue)
+Frame::Frame(Mat &image, int erodeIterations, int cannyThresh1, double cannyRatio, int cannyAperture, double darkThresh, int redMinHue, int redMaxHue, int permilThresh/*, int dilateKernel2Dim, int imgEdgeProp*/)
 {
 	const clock_t begin_t = clock();
 	this->image = image;
@@ -103,44 +104,77 @@ Frame::Frame(Mat &image, int erodeIterations, int cannyThresh1, double cannyRati
 
 	eraseSmall(dark, dark);
 
-	std::cout << "3.5: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
-
-	Canny(image, canny, cannyThresh1, cannyThresh1 * cannyRatio, cannyAperture);
-
-	std::cout << "4: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+	const clock_t begin_test = clock();
+	Mat mask;
+	cvtColor(image, mask, COLOR_BGR2GRAY);
+	adaptiveThreshold(mask, mask, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY_INV, 7, permilThresh / 1000.0 - 0.5);
+	mask -= dark;
+	Mat dilateKernel = getStructuringElement(MORPH_RECT, Size(17, 17), Point(-1, -1));
+	Mat erodeKernel = getStructuringElement(MORPH_RECT, Size(3, 3), Point(-1, -1));
 	
+	//erode(mask, mask, erodeKernel);
+	//dilate(mask, mask, dilateKernel);
 	Mat kernels[4] = { (Mat_<int>(3, 3) <<
 		0, -1, -1,
 		0, 1, -1,
 		0, -1, -1),
-	(Mat_<int>(3, 3) <<
-		0, 0, 0,
-		-1, 1, -1,
-		-1, -1, -1),
-	(Mat_<int>(3, 3) <<
-		-1, -1, 0,
-		-1, 1, 0,
-		-1, -1, 0),
-	(Mat_<int>(3, 3) <<
-		-1, -1, -1,
-		-1, 1, -1,
-		0, 0, 0) };
+		(Mat_<int>(3, 3) <<
+			0, 0, 0,
+			-1, 1, -1,
+			-1, -1, -1),
+		(Mat_<int>(3, 3) <<
+			-1, -1, 0,
+			-1, 1, 0,
+			-1, -1, 0),
+		(Mat_<int>(3, 3) <<
+			-1, -1, -1,
+			-1, 1, -1,
+			0, 0, 0) };
 
 	std::cout << "5: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 
 	for (int i = 0; i < erodeIterations; i++) {
 		Mat subtract;
-		cv::morphologyEx(canny, subtract, MORPH_HITMISS, kernels[i % 4]);
-		canny -= subtract;
+		cv::morphologyEx(mask, subtract, MORPH_HITMISS, kernels[i % 4]);
+		mask -= subtract;
 	}
+	imshow("adaptiveThreshold", mask);
+	//TESTING ONLY
+	canny = mask;
+	/*std::cout << "adaptiveThreshold: " << float(clock() - begin_test) * 1000 / CLOCKS_PER_SEC << endl;
+
+	std::cout << "3.5: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+
+	Canny(image, canny, cannyThresh1, cannyThresh1 * cannyRatio, cannyAperture);
+
+	std::cout << "4: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+
+	
 
 	std::cout << "6: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 
-	canny -= dark;
+	bitwise_and(canny, mask, canny);
 	showFinalCanny();
 
 
-	std::cout << "7: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+	std::cout << "7: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;*/
+	//if (old.rows != image.rows || old.cols != image.cols) {
+	//	old = Mat(image.rows, image.cols, CV_8UC1, Scalar(255));
+	//}
+	//Mat test = canny.clone();
+	//imshow("old", old);
+	//bitwise_and(old, test, test);
+	//imshow("test", test);
+
+	//Mat outer;
+	//outer = Mat(image.rows, image.cols, CV_8UC1, Scalar(255));
+	//rectangle(outer, Point(image.cols / imgEdgeProp, image.rows / imgEdgeProp), Point(image.cols * (imgEdgeProp - 1) / imgEdgeProp, image.rows * (imgEdgeProp - 1) / imgEdgeProp), Scalar(0), FILLED);
+	//imshow("outer", outer);
+	//Mat dilateKernel2 = getStructuringElement(MORPH_RECT, Size(dilateKernel2Dim, dilateKernel2Dim), Point(-1, -1));
+	//canny.copyTo(old);//dilate(mask, old, dilateKernel2);
+	//bitwise_or(old, outer, old);
+	/////imshow("old", old);
+	//canny = test;
 }
 
 
