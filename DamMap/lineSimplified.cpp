@@ -135,6 +135,9 @@ Vec4i LineSimplified::getEndpoints(int rows, int cols) {
 }
 
 const bool LineSimplified::crossed(int distThresh) {
+	if (vanished && abs(distFromTopLeft.back() - distFromTopLeft.front()) > distThresh) { ///debugging only!!
+		cout << "Vertical: " << vertical << " dist from Top Left: " << distFromTopLeft.front() << " dist from top left (back): " << distFromTopLeft.back() << endl;
+	}
 	return vanished && abs(distFromTopLeft.back() - distFromTopLeft.front()) > distThresh;
 }
 

@@ -1,3 +1,4 @@
+#include <opencv2/imgproc.hpp>
 #include "frame.h"
 #include "utils.h"
 
@@ -86,38 +87,43 @@ Frame::Frame(Mat &image, int erodeIterations, int cannyThresh1, double cannyRati
 {
 	const clock_t begin_t = clock();
 	this->image = image;
-	std::cout << "1: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 
 	cvtColor(image, hsv, COLOR_BGR2HSV);
 
-	std::cout << "2: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+	
 
 	//vector<Mat> foregrounds(0);
 	int avg = getAvgSaturationBackground(hsv/*, foregrounds*/);
-	std::cout << "2.5: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+	//std::cout << "2.5: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 	inRange(hsv, Scalar(0, 0, 0), Scalar(255, 255, avg * darkThresh), dark);		//detect all that is not white background
 	//Mat red;
 	//inRange(hsv, Scalar(redMinHue, 0, 0), Scalar(redMaxHue, 255, 255), red);
 	//dark += red;
 
-	std::cout << "3: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 
 	eraseSmall(dark, dark);
-
+	std::cout << "1: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 	const clock_t begin_test = clock();
 	Mat mask;
 	cvtColor(image, mask, COLOR_BGR2GRAY);
 	adaptiveThreshold(mask, mask, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY_INV, 7, permilThresh / 1000.0 - 0.5);
+
+	std::cout << "1.5: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+
 	mask -= dark;
-	Mat dilateKernel = getStructuringElement(MORPH_RECT, Size(17, 17), Point(-1, -1));
-	Mat erodeKernel = getStructuringElement(MORPH_RECT, Size(3, 3), Point(-1, -1));
+
+	std::cout << "2: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 	
+
+	//Mat dilateKernel = getStructuringElement(MORPH_RECT, Size(17, 17), Point(-1, -1));
+	//Mat erodeKernel = getStructuringElement(MORPH_RECT, Size(3, 3), Point(-1, -1));
 	//erode(mask, mask, erodeKernel);
-	//dilate(mask, mask, dilateKernel);
-	Mat kernels[4] = { (Mat_<int>(3, 3) <<
-		0, -1, -1,
-		0, 1, -1,
-		0, -1, -1),
+	////dilate(mask, mask, dilateKernel);
+	/*Mat kernels[4] = { 
+		(Mat_<int>(3, 3) <<
+			0, -1, -1,
+			0, 1, -1,
+			0, -1, -1),
 		(Mat_<int>(3, 3) <<
 			0, 0, 0,
 			-1, 1, -1,
@@ -131,50 +137,34 @@ Frame::Frame(Mat &image, int erodeIterations, int cannyThresh1, double cannyRati
 			-1, 1, -1,
 			0, 0, 0) };
 
-	std::cout << "5: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
-
 	for (int i = 0; i < erodeIterations; i++) {
 		Mat subtract;
 		cv::morphologyEx(mask, subtract, MORPH_HITMISS, kernels[i % 4]);
 		mask -= subtract;
+	}*/
+	erodePeninsulas(mask, mask, erodeIterations, 4);
+
+	std::cout << "3: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+
+
+	vector<Vec4i> hierarchy;
+	vector<vector<Point>> contours;
+	findContours(mask, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE, Point(0, 0));
+	for (int i = 0; i < contours.size(); i++) {
+		Rect box = boundingRect(contours[i]);
+		if (box.width < image.rows / 6 && box.width < image.cols / 6) {
+			drawContours(mask, contours, i, Scalar(0), FILLED);
+		}
 	}
-	imshow("adaptiveThreshold", mask);
-	//TESTING ONLY
-	canny = mask;
-	/*std::cout << "adaptiveThreshold: " << float(clock() - begin_test) * 1000 / CLOCKS_PER_SEC << endl;
-
-	std::cout << "3.5: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
-
-	Canny(image, canny, cannyThresh1, cannyThresh1 * cannyRatio, cannyAperture);
 
 	std::cout << "4: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 
-	
+	imshow("adaptiveThreshold", mask);
 
-	std::cout << "6: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+	std::cout << "5: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 
-	bitwise_and(canny, mask, canny);
-	showFinalCanny();
-
-
-	std::cout << "7: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;*/
-	//if (old.rows != image.rows || old.cols != image.cols) {
-	//	old = Mat(image.rows, image.cols, CV_8UC1, Scalar(255));
-	//}
-	//Mat test = canny.clone();
-	//imshow("old", old);
-	//bitwise_and(old, test, test);
-	//imshow("test", test);
-
-	//Mat outer;
-	//outer = Mat(image.rows, image.cols, CV_8UC1, Scalar(255));
-	//rectangle(outer, Point(image.cols / imgEdgeProp, image.rows / imgEdgeProp), Point(image.cols * (imgEdgeProp - 1) / imgEdgeProp, image.rows * (imgEdgeProp - 1) / imgEdgeProp), Scalar(0), FILLED);
-	//imshow("outer", outer);
-	//Mat dilateKernel2 = getStructuringElement(MORPH_RECT, Size(dilateKernel2Dim, dilateKernel2Dim), Point(-1, -1));
-	//canny.copyTo(old);//dilate(mask, old, dilateKernel2);
-	//bitwise_or(old, outer, old);
-	/////imshow("old", old);
-	//canny = test;
+	//TESTING ONLY
+	canny = mask;
 }
 
 

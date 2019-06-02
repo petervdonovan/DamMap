@@ -28,6 +28,7 @@ int main()
 	topPercent = 25;
 	bottomPercent = 25;
 	quadrant = 1; //quadrant probably should not exist in final
+	maxPixDim = 250;
 	createTrackbar("Left margin", "Get ROI variables", &leftPercent, 100);
 	createTrackbar("Right margin", "Get ROI variables", &rightPercent, 100);
 	createTrackbar("Top margin", "Get ROI variables", &topPercent, 100);
@@ -46,9 +47,9 @@ int main()
 	capture >> image;
 	image = getQuadrant(image, quadrant, leftPercent, topPercent, rightPercent, bottomPercent, maxPixDim);
 	History hist(image.rows, image.cols);
-
+	//cout << "rows: " << image.rows << " cols: " << image.cols << endl;
 	//testing only
-	//capture.set(CAP_PROP_POS_MSEC, 11600);
+	//capture.set(CAP_PROP_POS_FRAMES, 2640);
 
 	namedWindow("Frame (preprocessing) variables", WINDOW_AUTOSIZE);
 	int erodeIterations, cannyThresh1, cannyThresh2Percent, cannyAperture, darkThreshPercent, redMinHue, redMaxHue/*, dilateKernel2Dim, imgEdgeProp*/;
@@ -92,7 +93,7 @@ int main()
 	namedWindow("adaptiveThreshold", WINDOW_AUTOSIZE);
 	createTrackbar("C", "adaptiveThreshold", &permilThresh, 5000);
 
-	while (char(cv::waitKey(500)) != 'q') {
+	while (char(cv::waitKey(1)) != 'q') {
 		createTrackbar("Rho (px)", "Line Extraction and Grouping Variables", &rho, 20);
 		createTrackbar("Theta (minutes)", "Line Extraction and Grouping Variables", &thetaMinutes, 1200);
 		createTrackbar("Threshold", "Line Extraction and Grouping Variables", &threshold, 120);

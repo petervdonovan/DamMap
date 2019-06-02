@@ -56,21 +56,14 @@ bool linesAreSimilar(Vec4i line0, Vec4i line1, double angleThresh, int distanceT
 	double angle0 = angleOfLine(line0);
 	double angle1 = angleOfLine(line1);
 	if (angleThresh < abs(angle0 - angle1) && abs(angle0 - angle1) < CV_PI - angleThresh) return false;
-	//cout << line1[0] << " " << line1[1] << " " << line1[2] << " " << line1[3] << angle1 << endl;
-	//cout << line0[0] << " " << line0[1] << " " << line0[2] << " " << line0[3] << angle1 << endl;
 	int distance; //vertical or horizontal distance from line1, if it were extended forever, to first endpoint of line2
 	if (moreVerticalThanHorizontal(angle1)) { // if line1 is closer to vertical than horizontal
 		distance = ((cos(angle1) / sin(angle1)) * (line0[1] - line1[1]) + line1[0]) - line0[0];		//inverse function using point-slope form
-		//cout << "distance thresh: " << distanceThresh << " distance horizontal: " << distance << endl;
 	}
 	else {
 		double slope1 = (line1[3] - line1[1]) / (line1[2] - line1[0]);
-		//cout << "point " << (slope1 * (double)(line0[0] - line1[0]) - line1[1]) << endl;
-		//cout << "y value" << line0[1] << endl;
 		distance = (tan(angle1) * (line0[0] - line1[0]) + line1[1]) - line0[1]; //point-slope form where x0 is line1[0] and y0 is line1[1]
-		//cout << "distance vertical: " << distance << endl;
 	}
-	//cout << angle0 << endl;
 	return abs(distance) < distanceThresh;
 }
 
@@ -161,7 +154,6 @@ Mat getQuadrant(Mat& img, int quadrant) {
 	Mat roi;
 	if (quadrant == 1) {
 		roi = img(Range(0, img.rows / 2), Range(img.cols / 2, img.cols - 1));
-		cout << "1" << endl;
 	}
 	else if (quadrant == 2) {
 		roi = img(Range(0, img.rows / 2), Range(0, img.cols / 2));
@@ -191,7 +183,6 @@ Mat getQuadrant(Mat& img, int quadrant, int leftPercent, int topPercent, int rig
 	Mat roi;
 	if (quadrant == 1) {
 		roi = img(Range(0, img.rows / 2), Range(img.cols / 2, img.cols - 1));
-		cout << "1" << endl;
 	}
 	else if (quadrant == 2) {
 		roi = img(Range(0, img.rows / 2), Range(0, img.cols / 2));
@@ -206,13 +197,63 @@ Mat getQuadrant(Mat& img, int quadrant, int leftPercent, int topPercent, int rig
 		img.copyTo(roi);
 	}
 	//roi = roi(Range(roi.rows / 8, roi.rows / 10 * 9), Range(0, roi.cols / 10 * 7));
-	/*if (roi.cols > maxPixDim) {
-		resize(roi, roi, Size(maxPixDim, maxPixDim * roi.rows / roi.cols));
+	roi = roi(Range(roi.rows * topPercent / 100, roi.rows - (roi.rows * bottomPercent / 100)), Range(roi.cols * leftPercent / 100, roi.cols - (roi.cols * rightPercent / 100) ));
+	if (roi.cols > maxPixDim) {
+	resize(roi, roi, Size(maxPixDim, maxPixDim * roi.rows / roi.cols));
 	}
 	if (roi.rows > maxPixDim) {
-		resize(roi, roi, Size(maxPixDim * roi.cols / roi.rows, maxPixDim));
-	}*/
-	roi = roi(Range(roi.rows * topPercent / 100, roi.rows - (roi.rows * bottomPercent / 100)), Range(roi.cols * leftPercent / 100, roi.cols - (roi.cols * rightPercent / 100) ));
+	resize(roi, roi, Size(maxPixDim * roi.cols / roi.rows, maxPixDim));
+	}
 	//roi = roi(Range(roi.rows / 4, roi.rows * 3/4), Range(roi.cols / 7, roi.cols * 2 / 5));
 	return roi;
+}
+
+void erodePeninsulas(Mat& src, Mat&out, int iterations, int minSides) {
+	// accept only char type matrices
+	CV_Assert(src.depth() == CV_8U);	//get information about the source
+	int channels = src.channels();
+	int nRows = src.rows;
+	int nCols = src.cols * channels;
+	//if (src.isContinuous())
+	//{
+	//	nCols *= nRows;
+	//	nRows = 1;
+	//}
+
+	src.copyTo(out);  //all operations will be on the output now
+
+	//variable declarations
+	int i, j; //index variables
+	uchar* p, *prev, *next; //pointers to rows
+	for (int n = 0; n < iterations; n++)
+	{
+		for (i = 1; i < nRows - 1; ++i) //iterate through rows
+		{
+			prev = out.ptr<uchar>(i - 1);
+			p = out.ptr<uchar>(i);
+			next = out.ptr<uchar>(i + 1);
+			for (j = 1; j < nCols - 1; ++j)
+			{
+				if (p[j]) {			//Only do this operation if current pixel is white
+					int count = 0;
+					//count up all surrounding white pixels
+					if (prev[j - 1]) ++count;
+					if (prev[j]) ++count;
+					if (prev[j + 1]) ++count;
+					if (p[j - 1]) ++count;
+					//if (p[j] == 1) ++count; //Don't count this; it's the current pixel so of course it's white
+					if (p[j + 1]) ++count;
+					if (next[j - 1]) ++count;
+					if (next[j]) ++count;
+					if (next[j + 1]) ++count;
+					if (count < minSides) p[j] = 0; //Set to zero if too few of surrounding sides are white
+				}
+			}
+		}
+	}
+	//set borders to black
+	cv::Rect border(cv::Point(0, 0), out.size());
+	cv::Scalar color(0, 0, 0);
+	int thickness = 1;
+	cv::rectangle(out, border, color, thickness);
 }

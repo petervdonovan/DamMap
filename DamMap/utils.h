@@ -21,3 +21,4 @@ Vec4i getAvgHoughLine(vector<Vec4i> linesP);
 bool moreVerticalThanHorizontal(double angle);
 Mat getQuadrant(Mat& img, int quadrant);
 Mat getQuadrant(Mat& img, int quadrant, int leftPercent, int topPercent, int rightPercent, int bottomPercent, int maxPixDim);
+void erodePeninsulas(Mat& src, Mat&out, int iterations = 1, int minSides = 3);

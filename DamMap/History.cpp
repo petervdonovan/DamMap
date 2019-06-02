@@ -28,13 +28,15 @@ void History::update(vector<vector<Vec4i>> groupsOfLines, int crossedThresh, int
 			}
 		}
 		if (!found) i->incrementVanished();
-		if (i->crossed(min(rows * 3 / 5, cols * 3 / 5))) {
+		int distMustCross = i->getVertical() ? cols * 3 / 5 : rows * 3 / 5;
+		if (i->crossed(distMustCross)) {
 			cout << "crossed into new square ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! " << endl;
 			if (i->getVertical()) {
 				if (i->getDistFromTopLeft() < cols / 2) {
 					points.push_back(Point(points.back().x + 1, points.back().y));
 				}
 				else {
+					cout << i->getDistFromTopLeft() << " and " << cols / 2;
 					points.push_back(Point(points.back().x - 1, points.back().y));
 				}
 			}
