@@ -83,7 +83,7 @@ int Frame::getAvgSaturationBackground(Mat& hsvMat/*, vector<cv::Mat>& foreground
 	return avg;
 }
 
-Frame::Frame(Mat &image, int erodeIterations, int cannyThresh1, double cannyRatio, int cannyAperture, double darkThresh, int redMinHue, int redMaxHue, int permilThresh/*, int dilateKernel2Dim, int imgEdgeProp*/)
+Frame::Frame(Mat &image, int erodeIterations, int cannyThresh1, double cannyRatio, int cannyAperture, double darkThresh, int redMinHue, int redMaxHue, int permilThresh, int minInverseProportionOfImage/*, int dilateKernel2Dim, int imgEdgeProp*/)
 {
 	const clock_t begin_t = clock();
 	this->image = image;
@@ -109,7 +109,7 @@ Frame::Frame(Mat &image, int erodeIterations, int cannyThresh1, double cannyRati
 	adaptiveThreshold(mask, mask, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY_INV, 7, permilThresh / 1000.0 - 0.5);
 
 	std::cout << "1.5: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
-
+	imshow("final dark", dark);
 	mask -= dark;
 
 	std::cout << "2: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
@@ -142,8 +142,9 @@ Frame::Frame(Mat &image, int erodeIterations, int cannyThresh1, double cannyRati
 		cv::morphologyEx(mask, subtract, MORPH_HITMISS, kernels[i % 4]);
 		mask -= subtract;
 	}*/
+	imshow("before erode peninsulas", mask);
 	erodePeninsulas(mask, mask, erodeIterations, 4);
-
+	imshow("after erode peninsulas", mask);
 	std::cout << "3: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 
 
@@ -152,7 +153,7 @@ Frame::Frame(Mat &image, int erodeIterations, int cannyThresh1, double cannyRati
 	findContours(mask, contours, hierarchy, RETR_LIST, CHAIN_APPROX_SIMPLE, Point(0, 0));
 	for (int i = 0; i < contours.size(); i++) {
 		Rect box = boundingRect(contours[i]);
-		if (box.width < image.rows / 6 && box.width < image.cols / 6) {
+		if (box.height < image.rows / minInverseProportionOfImage && box.width < image.cols / minInverseProportionOfImage) {
 			drawContours(mask, contours, i, Scalar(0), FILLED);
 		}
 	}

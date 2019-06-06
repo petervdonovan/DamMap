@@ -24,7 +24,7 @@ private:
 	void eraseSmallAbs(const Mat& srcBin, Mat& outBin, int erodeSize = 2, int dilateSize = 5);
 	
 public:
-	Frame(Mat &image, int erodeIterations = 48, int cannyThresh1 = 15, double cannyRatio = 45, int cannyAperture = 3, double darkThresh = 0.9, int redMinHue = 160, int redMaxHue = 200, int permilThresh = 2000/*, int dilateKernel2Dim = 9, int imgEdgeProp = 7*/);
+	Frame(Mat &image, int erodeIterations = 48, int cannyThresh1 = 15, double cannyRatio = 45, int cannyAperture = 3, double darkThresh = 0.9, int redMinHue = 160, int redMaxHue = 200, int permilThresh = 2000, int minInverseProportionOfImage = 6/*, int dilateKernel2Dim = 9, int imgEdgeProp = 7*/);
 	~Frame();
 
 	const Mat& getChannelBinary();

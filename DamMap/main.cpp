@@ -19,7 +19,7 @@ using namespace cv;
 
 int main()
 {
-	String sourceReference = "lineFollow.mp4";
+	String sourceReference = "record4.mp4";
 	VideoCapture capture(sourceReference);
 	namedWindow("Get ROI variables", WINDOW_AUTOSIZE);
 	int leftPercent, rightPercent, topPercent, bottomPercent, maxPixDim, quadrant;
@@ -27,7 +27,7 @@ int main()
 	rightPercent = 40;
 	topPercent = 25;
 	bottomPercent = 25;
-	quadrant = 1; //quadrant probably should not exist in final
+	quadrant = 0; //quadrant probably should not exist in final
 	maxPixDim = 250;
 	createTrackbar("Left margin", "Get ROI variables", &leftPercent, 100);
 	createTrackbar("Right margin", "Get ROI variables", &rightPercent, 100);
@@ -52,23 +52,25 @@ int main()
 	//capture.set(CAP_PROP_POS_FRAMES, 2640);
 
 	namedWindow("Frame (preprocessing) variables", WINDOW_AUTOSIZE);
-	int erodeIterations, cannyThresh1, cannyThresh2Percent, cannyAperture, darkThreshPercent, redMinHue, redMaxHue/*, dilateKernel2Dim, imgEdgeProp*/;
+	int erodeIterations, cannyThresh1, cannyThresh2Percent, cannyAperture, darkThreshPercent, redMinHue, redMaxHue, minInverseProportionOfImage/*, dilateKernel2Dim, imgEdgeProp*/;
 	erodeIterations = 20;
 	cannyThresh1 = 13;
 	cannyThresh2Percent = 1000;
 	cannyAperture = 3;
 	darkThreshPercent = 90;
-	redMinHue = 160;
-	redMaxHue = 200;
+	redMinHue = 17;//redMinHue = 160;
+	redMaxHue = 37;//redMaxHue = 200;
+	minInverseProportionOfImage = 6;
 	//dilateKernel2Dim = 3;
 	//imgEdgeProp = 7;
 	createTrackbar("Erode Iterations", "Frame (preprocessing) variables", &erodeIterations, 200);
-	createTrackbar("Canny Threshold 1", "Frame (preprocessing) variables", &cannyThresh1, 45);
-	createTrackbar("Canny Threshold 2 percent", "Frame (preprocessing) variables", &cannyThresh2Percent, 400);
-	createTrackbar("Canny Aperture", "Frame (preprocessing) variables", &cannyAperture, 7);
+	//createTrackbar("Canny Threshold 1", "Frame (preprocessing) variables", &cannyThresh1, 45);
+	//createTrackbar("Canny Threshold 2 percent", "Frame (preprocessing) variables", &cannyThresh2Percent, 400);
+	//createTrackbar("Canny Aperture", "Frame (preprocessing) variables", &cannyAperture, 7);
 	createTrackbar("Dark Threshold Percent", "Frame (preprocessing) variables", &darkThreshPercent, 100);
-	//createTrackbar("Red Min Hue", "Frame (preprocessing) variables", &redMinHue, 360);
-	//createTrackbar("Red Max Hue", "Frame (preprocessing) variables", &redMaxHue, 360);
+	createTrackbar("Min Inv", "Frame (preprocessing) variables", &minInverseProportionOfImage, 25);
+	createTrackbar("Red Min Hue", "Frame (preprocessing) variables", &redMinHue, 360);
+	createTrackbar("Red Max Hue", "Frame (preprocessing) variables", &redMaxHue, 360);
 	//createTrackbar("DilateKernel2Dim", "Frame (preprocessing) variables", &dilateKernel2Dim, 17);
 	//createTrackbar("imgEdgeProp", "Frame (preprocessing) variables", &imgEdgeProp, 15);
 
@@ -115,7 +117,7 @@ int main()
 
 		//Preprocessing
 		const clock_t begin_t1 = clock();
-		Frame frame = Frame(image, erodeIterations, cannyThresh1, cannyThresh2Percent / 100.0, max(3, cannyAperture / 2 * 2 + 1), darkThreshPercent / 100.0, redMinHue, redMaxHue, permilThresh/*, max(3, dilateKernel2Dim / 2 * 2 + 1), imgEdgeProp*/);
+		Frame frame = Frame(image, erodeIterations, cannyThresh1, cannyThresh2Percent / 100.0, max(3, cannyAperture / 2 * 2 + 1), darkThreshPercent / 100.0, redMinHue, redMaxHue, permilThresh, minInverseProportionOfImage/*, max(3, dilateKernel2Dim / 2 * 2 + 1), imgEdgeProp*/);
 		std::cout << "frame: " << float(clock() - begin_t1) * 1000 / CLOCKS_PER_SEC << endl;
 
 		//Extract line groups
