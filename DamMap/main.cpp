@@ -110,35 +110,37 @@ int main()
 
 		//Get image
 		capture >> image;
+		//std::cout << "Before show source: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 		imshow("src", image);
 		if (!capture.isOpened()) break;
+		//std::cout << "Before getQuadrant: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 		image = getQuadrant(image, quadrant, leftPercent, topPercent, rightPercent, bottomPercent, maxPixDim);   //get quadrant 1 of the image
-		std::cout << "Before frame: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+		//std::cout << "Before frame: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 
 		//Preprocessing
 		const clock_t begin_t1 = clock();
 		Frame frame = Frame(image, erodeIterations, cannyThresh1, cannyThresh2Percent / 100.0, max(3, cannyAperture / 2 * 2 + 1), darkThreshPercent / 100.0, redMinHue, redMaxHue, permilThresh, minInverseProportionOfImage/*, max(3, dilateKernel2Dim / 2 * 2 + 1), imgEdgeProp*/);
-		std::cout << "frame: " << float(clock() - begin_t1) * 1000 / CLOCKS_PER_SEC << endl;
+		//std::cout << "frame: " << float(clock() - begin_t1) * 1000 / CLOCKS_PER_SEC << endl;
 
 		//Extract line groups
 		const clock_t afterFrame = clock();
 		const clock_t begin_t2 = clock();
 		LineGroupList lineGroups = LineGroupList(frame, rho, thetaMinutes, threshold, minLineLength, maxLineGap);
-		std::cout << "lineGroups: " << float(clock() - begin_t2) * 1000 / CLOCKS_PER_SEC << endl;
+		//std::cout << "lineGroups: " << float(clock() - begin_t2) * 1000 / CLOCKS_PER_SEC << endl;
 
 		lineGroups.showGroups();
 
 		//update history and map
 		const clock_t begin_t3 = clock();
 		hist.update(lineGroups.getGroupsOfLines(), crossedThresh, vanishedThresh, distThreshForSimilarity);
-		std::cout << "hist: " << float(clock() - begin_t3) * 1000 / CLOCKS_PER_SEC << endl;
+		//std::cout << "hist: " << float(clock() - begin_t3) * 1000 / CLOCKS_PER_SEC << endl;
 
 		//show map
 		hist.showCurrent(image);
 		hist.show();
-		std::cout << "After frame: " << float(clock() - afterFrame) * 1000 / CLOCKS_PER_SEC << endl;
+		//std::cout << "After frame: " << float(clock() - afterFrame) * 1000 / CLOCKS_PER_SEC << endl;
 
-		std::cout << "inside while loop: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
+		//std::cout << "inside while loop: " << float(clock() - begin_t) * 1000 / CLOCKS_PER_SEC << endl;
 	}
 	cv::waitKey(500);
 }

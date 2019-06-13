@@ -36,7 +36,7 @@ void History::update(vector<vector<Vec4i>> groupsOfLines, int crossedThresh, int
 					points.push_back(Point(points.back().x + 1, points.back().y));
 				}
 				else {
-					cout << i->getDistFromTopLeft() << " and " << cols / 2;
+					//cout << i->getDistFromTopLeft() << " and " << cols / 2;
 					points.push_back(Point(points.back().x - 1, points.back().y));
 				}
 			}
@@ -98,4 +98,50 @@ void History::show() {
 	namedWindow("Map");
 	moveWindow("Map", 0, 500);
 	imshow("Map", map);
+	guessMap();
+}
+
+void History::guessMap() {
+	//Assume all to be true and find correct one by process of elimination
+	bool grid1 = true, grid2 = true, grid3 = true, grid4 = true, grid5 = true, grid6 = true;
+	if (points.size() > 1) {
+		if (points[1].x > points[0].x) { //If it starts by moving right
+			grid1 = false;
+			grid2 = false;
+		}
+		else {
+			grid3 = false;
+			grid4 = false;
+			grid5 = false;
+			grid6 = false;
+		}
+	}
+	if (points.size() > 2) {
+		int verticalCount = 0;
+		int horizontalCount = 0;
+		//iterate through all squares except first and (last - 1)
+		for (size_t i = 1; i < min(points.size(), (size_t) 13) - 1; i++) { 
+			if (points[i + 1].y != points[i].y) verticalCount++;
+			else horizontalCount++;
+		}
+		if (verticalCount > horizontalCount) {
+			grid1 = false;
+			grid3 = false;
+			grid5 = false;
+		}
+		else if (horizontalCount > verticalCount) {
+			grid2 = false;
+			grid4 = false;
+			grid6 = false;
+		}
+	}
+	cout << "grid1: " << grid1 << endl;
+	cout << "grid2: " << grid2 << endl;
+	cout << "grid3: " << grid3 << endl;
+	cout << "grid4: " << grid4 << endl;
+	cout << "grid5: " << grid5 << endl;
+	cout << "grid6: " << grid6 << endl;
+	//TODO: Find a way to determine if it's reached the end, and use that to tell 
+	//the difference between 4 and 6 or between 3 and 5.
+	//Just counting the number of squares it has gone through is too unreliable
 }
