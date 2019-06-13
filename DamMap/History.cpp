@@ -98,22 +98,20 @@ void History::show() {
 	namedWindow("Map");
 	moveWindow("Map", 0, 500);
 	imshow("Map", map);
-	guessMap();
+	uint8_t grid;
+	guessMap(grid);
 }
 
-void History::guessMap() {
+void History::guessMap(uint8_t &grid) {
 	//Assume all to be true and find correct one by process of elimination
-	bool grid1 = true, grid2 = true, grid3 = true, grid4 = true, grid5 = true, grid6 = true;
+	//bool grid1 = true, grid2 = true, grid3 = true, grid4 = true, grid5 = true, grid6 = true;
+	grid = 255;
 	if (points.size() > 1) {
 		if (points[1].x > points[0].x) { //If it starts by moving right
-			grid1 = false;
-			grid2 = false;
+			grid &= 0b00111111; //grids 1 and 2 are false
 		}
 		else {
-			grid3 = false;
-			grid4 = false;
-			grid5 = false;
-			grid6 = false;
+			grid &= 0b11000011; //grids 3-6 are false
 		}
 	}
 	if (points.size() > 2) {
@@ -125,22 +123,18 @@ void History::guessMap() {
 			else horizontalCount++;
 		}
 		if (verticalCount > horizontalCount) {
-			grid1 = false;
-			grid3 = false;
-			grid5 = false;
+			grid &= 0b01010111; //grids 1, 3, and 5 are false
 		}
 		else if (horizontalCount > verticalCount) {
-			grid2 = false;
-			grid4 = false;
-			grid6 = false;
+			grid &= 0b10101011; //grids 2, 4, and 6 are false
 		}
 	}
-	cout << "grid1: " << grid1 << endl;
-	cout << "grid2: " << grid2 << endl;
-	cout << "grid3: " << grid3 << endl;
-	cout << "grid4: " << grid4 << endl;
-	cout << "grid5: " << grid5 << endl;
-	cout << "grid6: " << grid6 << endl;
+	cout << "grid1: " << (grid & 0b10000000) << endl;
+	cout << "grid2: " << (grid & 0b01000000) << endl;
+	cout << "grid3: " << (grid & 0b00100000) << endl;
+	cout << "grid4: " << (grid & 0b00010000) << endl;
+	cout << "grid5: " << (grid & 0b00001000) << endl;
+	cout << "grid6: " << (grid & 0b00000100) << endl;
 	//TODO: Find a way to determine if it's reached the end, and use that to tell 
 	//the difference between 4 and 6 or between 3 and 5.
 	//Just counting the number of squares it has gone through is too unreliable

@@ -13,7 +13,7 @@ private:
 	double borderThresh;
 	vector<LineSimplified> currentLines;
 	vector<Point> points;
-	void guessMap();
+	void guessMap(uint8_t &grid);
 
 public:
 	History(int rows, int cols, double borderThresh = 0.4);
